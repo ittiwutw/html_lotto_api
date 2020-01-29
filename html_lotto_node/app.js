@@ -1,23 +1,32 @@
 const http = require("http");
 var express = require("express");
 var app = express();
+var masterRepo = require("./repo/masterRepo");
 
 const hostname = "127.0.0.1";
-const port = 8082;
+const port = 8080;
 
 const jsdom = require("jsdom");
 const { JSDOM } = jsdom;
 
 const curl = require("curl");
-const url_lottovip = "https://www.lottovip.com/login"  
-const url_jetsadabet = "https://www.jetsadabet.com/login"
-const url_mawinbet = "https://mawinbet.com"
-const url_choke77 = "http://choke77.com"
-const url_huay = "https://www.huay.com/login#/lottery/result"
+const url_lottovip = "https://www.lottovip.com/login";
+const url_jetsadabet = "https://www.jetsadabet.com/login";
+const url_mawinbet = "https://mawinbet.com";
+const url_choke77 = "http://choke77.com";
+const url_huay = "https://www.huay.com/login#/lottery/result";
 
+app.listen(port, () => {
+  console.log("Server running on port" + port);
+});
 
-app.listen(8082, () => {
-  console.log("Server running on port 8082");
+app.use(function(req, res, next) {
+  res.header("Access-Control-Allow-Origin", "http://localhost:8100"); // update to match the domain you will make the request from
+  res.header(
+    "Access-Control-Allow-Headers",
+    "Origin, X-Requested-With, Content-Type, Accept"
+  );
+  next();
 });
 
 app.get("/jetsadabet", (req, res, next) => {
@@ -31,7 +40,7 @@ app.get("/jetsadabet", (req, res, next) => {
       console.log("error while fetching url");
     }
   });
-//   res.json(result);
+  //   res.json(result);
 });
 
 app.get("/jetsadabetvip", (req, res, next) => {
@@ -45,11 +54,11 @@ app.get("/jetsadabetvip", (req, res, next) => {
       console.log("error while fetching url");
     }
   });
-//   res.json(result);
+  //   res.json(result);
 });
 
 app.get("/lottovip", (req, res, next) => {
-    var result;
+  var result;
   curl.get(url_lottovip, null, (err, resp, body) => {
     if (resp.statusCode == 200) {
       result = parseData(body);
@@ -59,35 +68,49 @@ app.get("/lottovip", (req, res, next) => {
       console.log("error while fetching url");
     }
   });
-//   res.json(result);
+  //   res.json(result);
 });
 
 app.get("/huay", (req, res, next) => {
   var result;
-curl.get(url_huay, null, (err, resp, body) => {
-  if (resp.statusCode == 200) {
-    result = huay(body);
-    res.json(result);
-  } else {
-    //some error handling
-    console.log("error while fetching url");
-  }
+  curl.get(url_huay, null, (err, resp, body) => {
+    if (resp.statusCode == 200) {
+      result = huay(body);
+      res.json(result);
+    } else {
+      //some error handling
+      console.log("error while fetching url");
+    }
+  });
+  //   res.json(result);
 });
-//   res.json(result);
+
+app.get("/huay_vip", (req, res, next) => {
+  var result;
+  curl.get(url_huay, null, (err, resp, body) => {
+    if (resp.statusCode == 200) {
+      result = huay_vip(body);
+      res.json(result);
+    } else {
+      //some error handling
+      console.log("error while fetching url");
+    }
+  });
+  //   res.json(result);
 });
 
 app.get("/mawinbet", (req, res, next) => {
   var result;
-curl.get(url_mawinbet, null, (err, resp, body) => {
-  if (resp.statusCode == 200) {
-    result = mawinbet(body);
-    res.json(result);
-  } else {
-    //some error handling
-    console.log("error while fetching url");
-  }
-});
-//   res.json(result);
+  curl.get(url_mawinbet, null, (err, resp, body) => {
+    if (resp.statusCode == 200) {
+      result = mawinbet(body);
+      res.json(result);
+    } else {
+      //some error handling
+      console.log("error while fetching url");
+    }
+  });
+  //   res.json(result);
 });
 
 app.get("/choke77", (req, res, next) => {
@@ -101,9 +124,23 @@ app.get("/choke77", (req, res, next) => {
       console.log("error while fetching url");
     }
   });
-//   res.json(result);
+  //   res.json(result);
 });
 
+app.get("/huay1", (req, res, next) => {
+  getHuay1().then(val => {
+    res.json(val);
+  });
+  
+  //   res.json(result);
+});
+
+async function getHuay1() {
+  var data = await masterRepo.getHuay1();
+
+  // callback("", { response_code: "0000", response_description: "SUCCESS" , data});
+  return data;
+}
 
 function parseData(html) {
   const { JSDOM } = jsdom;
@@ -116,7 +153,7 @@ function parseData(html) {
     .children(".px-0")
     .children(".px-1");
 
-    var result = [];
+  var result = [];
   for (var i = 0; i < card.length; i++) {
     var innerInfo = $(card[i])
       .children(".mb-2")
@@ -129,9 +166,9 @@ function parseData(html) {
       "งวดที่ " + (i + 1) + " -> 3 ตัวบน " + treeup + " : 2 ตัวล่าง : " + twolow
     );
     let getRes = {
-        tree: treeup,
-        two: twolow
-    }
+      tree: treeup,
+      two: twolow
+    };
 
     result.push(getRes);
   }
@@ -146,18 +183,18 @@ function jetsadabet(html) {
   //let's start extracting the data
   var items = $(".lotto-result");
   // console.log(items)
-  var card = $(items)
-      .children("tbody");
+  var card = $(items).children("tbody");
   // console.log(card)
   var result = [];
   // for (var i = 0; i < card.length; i++) {
-    var innerInfo = $(card[4])
-        .children("tr")
-        ;
-
-  for(var i = 0; i < innerInfo.length; i++){
-    var box1 = $($(innerInfo[i]).find("td")[0]).html().trim();
-    var box2 = $($(innerInfo[i]).find("td")[1]).html().trim();
+  var innerInfo = $(card[4]).children("tr");
+  for (var i = 0; i < innerInfo.length; i++) {
+    var box1 = $($(innerInfo[i]).find("td")[0])
+      .html()
+      .trim();
+    var box2 = $($(innerInfo[i]).find("td")[1])
+      .html()
+      .trim();
 
     let getRes = {
       // res: innerInfo,
@@ -165,7 +202,6 @@ function jetsadabet(html) {
       box2: box2
     };
     result.push(getRes);
-
   }
   // }
 
@@ -178,19 +214,19 @@ function jetsadabetvip(html) {
   const $ = require("jquery")(dom.window);
   //let's start extracting the data
   var items = $(".lotto-result");
-  console.log(items)
-  var card = $(items)
-      .children("tbody");
+  console.log(items);
+  var card = $(items).children("tbody");
   // console.log(card)
   var result = [];
   // for (var i = 0; i < card.length; i++) {
-    var innerInfo = $(card[5])
-        .children("tr")
-        ;
-
-  for(var i = 0; i < innerInfo.length; i++){
-    var box1 = $($(innerInfo[i]).find("td")[0]).html().trim();
-    var box2 = $($(innerInfo[i]).find("td")[1]).html().trim();
+  var innerInfo = $(card[5]).children("tr");
+  for (var i = 0; i < innerInfo.length; i++) {
+    var box1 = $($(innerInfo[i]).find("td")[0])
+      .html()
+      .trim();
+    var box2 = $($(innerInfo[i]).find("td")[1])
+      .html()
+      .trim();
 
     let getRes = {
       // res: innerInfo,
@@ -198,7 +234,6 @@ function jetsadabetvip(html) {
       box2: box2
     };
     result.push(getRes);
-
   }
   // }
 
@@ -211,18 +246,14 @@ function mawinbet(html) {
   const $ = require("jquery")(dom.window);
   //let's start extracting the data
   var items = $(".table-bordered");
-      // .children("aaa");
-  console.log(items)
-  var card = $(items)
-      .children("tbody");
+  // .children("aaa");
+  console.log(items);
+  var card = $(items).children("tbody");
   // console.log(card)
   var result = [];
   // for (var i = 0; i < card.length; i++) {
-    var innerInfo = $(card[6])
-        .children("tr")
-        ;
-
-  for(var i = 0; i < innerInfo.length; i++){
+  var innerInfo = $(card[6]).children("tr");
+  for (var i = 0; i < innerInfo.length; i++) {
     var box1 = $($(innerInfo[i]).find("span")[0]).html();
     var box2 = $($(innerInfo[i]).find("span")[1]).html();
 
@@ -232,7 +263,6 @@ function mawinbet(html) {
       box2: box2
     };
     result.push(getRes);
-
   }
   // }
 
@@ -246,10 +276,11 @@ function choke77(html) {
   //let's start extracting the data
   var items = $("#pingpon-results");
   var card = $(items)
-      .children("tbody").children("tr");
+    .children("tbody")
+    .children("tr");
 
   var result = [];
-  console.log(card.length)
+  console.log(card.length);
   for (var i = 0; i < card.length; i++) {
     var innerInfo = $(card[i]);
     var res1 = $($(innerInfo).find("td")[1]).html();
@@ -257,7 +288,7 @@ function choke77(html) {
     let getRes = {
       res1: res1,
       res2: res2
-    }
+    };
 
     result.push(getRes);
   }
@@ -265,21 +296,20 @@ function choke77(html) {
   return result;
 }
 
-
-function huay(html) {
+function huay_vip(html) {
   const { JSDOM } = jsdom;
   const dom = new JSDOM(html);
   const $ = require("jquery")(dom.window);
   //let's start extracting the data
   var items = $("#yeekee");
-      // .children("aaa");
+  // .children("aaa");
   // console.log(items.length)
   var card = $(items)
-      .children(".col-12")
-      .children(".background-card")
-      .children(".card-body")
-      // .children(".mb-2")
-  console.log(card.length)
+    .children(".col-12")
+    .children(".background-card")
+    .children(".card-body");
+  // .children(".mb-2")
+  console.log(card.length);
 
   const dom2 = new JSDOM(card.html());
   const $d = require("jquery")(dom2.window);
@@ -292,18 +322,127 @@ function huay(html) {
   //       ;
   // console.log(innerInfo.length)
   // console.log(innerInfo)
-  for(var i = 0; i < 1; i++){
-    var box1 = $($(card[i]).find(".yeekee_last_result")).html();
-  //   var box2 = $($(innerInfo[i]).find("p")[1]).html();
+  var card2 = card.html();
+  card2 = card2.substring(
+    card2.lastIndexOf(`<template`),
+    card2.lastIndexOf(`</template>`) + 11
+  );
+  card2 = card2.replace(/template/g, "html");
+
+  const dom3 = new JSDOM(card2);
+  const $d2 = require("jquery")(dom3.window);
+
+  var card3 = $d2("p[class='number text-center m-0']");
+
+  for (var i = 0; i <= card3.length; i = i + 2) {
+    if (i == card3.length) {
+      break;
+    }
 
     let getRes = {
       // res: innerInfo,
-      box1: card.html(),
+      box1: $d2(card3[i])
+        .html()
+        .trim(),
+      box2: 0
       // box2: ]box2
     };
-    result.push(getRes);
 
+    if (i + 1 >= card3.length) {
+      break;
+    } else {
+      getRes.box2 = $d2(card3[i + 1])
+        .html()
+        .trim();
+      result.push(getRes);
+    }
   }
+
+  // let getRes = {
+  //   // res: innerInfo,
+  //   box1: card3.html(),
+  //   // box2: ]box2
+  // };
+  // result.push(getRes);
+  //   var box2 = $($(innerInfo[i]).find("p")[1]).html();
+
+  // }
+  // }
+
+  return result;
+}
+
+function huay(html) {
+  const { JSDOM } = jsdom;
+  const dom = new JSDOM(html);
+  const $ = require("jquery")(dom.window);
+  //let's start extracting the data
+  var items = $("#yeekee");
+  // .children("aaa");
+  // console.log(items.length)
+  var card = $(items)
+    .children(".col-12")
+    .children(".background-card")
+    .children(".card-body");
+  // .children(".mb-2")
+  console.log(card.length);
+
+  const dom2 = new JSDOM(card.html());
+  const $d = require("jquery")(dom2.window);
+  var item2 = $d().html();
+
+  var result = [];
+  // for (var i = 0; i < card.length; i++) {
+  //   var innerInfo = $(card[i])
+  //       .children(".col-6")
+  //       ;
+  // console.log(innerInfo.length)
+  // console.log(innerInfo)
+  var card2 = card.html();
+  card2 = card2.substring(
+    card2.lastIndexOf(`<template v-if="result_type == 1">`),
+    card2.lastIndexOf(`<template v-if="result_type == 2">`)
+  );
+  card2 = card2.replace(/template/g, "html");
+
+  const dom3 = new JSDOM(card2);
+  const $d2 = require("jquery")(dom3.window);
+
+  var card3 = $d2("p[class='number text-center m-0']");
+
+  for (var i = 0; i <= card3.length; i = i + 2) {
+    if (i == card3.length) {
+      break;
+    }
+
+    let getRes = {
+      // res: innerInfo,
+      box1: $d2(card3[i])
+        .html()
+        .trim(),
+      box2: 0
+      // box2: ]box2
+    };
+
+    if (i + 1 >= card3.length) {
+      break;
+    } else {
+      getRes.box2 = $d2(card3[i + 1])
+        .html()
+        .trim();
+      result.push(getRes);
+    }
+  }
+
+  // let getRes = {
+  //   // res: innerInfo,
+  //   box1: card3.html(),
+  //   // box2: ]box2
+  // };
+  // result.push(getRes);
+  //   var box2 = $($(innerInfo[i]).find("p")[1]).html();
+
+  // }
   // }
 
   return result;
